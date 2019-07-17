@@ -1,15 +1,20 @@
-resolver: lts-13.20
+resolver: lts-13.21
 
 packages:
   - .
+  - ../numhask/numhask-array
+  - ../numhask/numhask
+  - ../numhask/numhask-prelude
+  - ../numhask/numhask-space
+  - ../numhask/numhask-hedgehog
 
 extra-deps:
   - dimensions-1.0.1.1
   - perf-0.4.1.0
   - perf-analysis-0.0.1.1
   - rdtsc-1.3.0.1
-  - numhask-0.3.0.0
-  - numhask-array-0.3
-  - numhask-prelude-0.3.1
-  - numhask-space-0.1.1
-  - numhask-hedgehog-0.3
+  # - numhask-0.3.0.0
+  # - numhask-array-0.3
+  # - numhask-prelude-0.3.1
+  # - numhask-space-0.1.1
+  # - numhask-hedgehog-0.3

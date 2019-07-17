@@ -5,10 +5,10 @@ square matrix size: 10
 mmult
 run                        first      2nd      3rd   median      av.
 
-numhask []                1.20e4   1.10e2   7.20e1   6.92e1   5.24e2
-numhask Boxed             5.21e4   2.41e4   2.25e4   5.39e3   2.87e4
-hmatrix                   2.42e4   2.67e3   2.09e3   2.17e3   3.79e3
-DLA                       5.98e4   5.48e4   5.38e4   5.46e4   8.55e4
+numhask []                3.35e6   6.50e6   1.66e6   1.13e6   1.36e6
+numhask Boxed             1.04e6   1.56e6   1.84e6   1.30e6   1.44e6
+hmatrix                   1.88e4   2.63e3   1.99e3   1.90e3   5.09e3
+DLA                       2.32e5   9.45e4   5.36e4   5.39e4   8.30e4
 ```
 
 ```
@@ -17,10 +17,10 @@ random version square matrix size: 10
 mmult, randoms
 run                        first      2nd      3rd   median      av.
 
-numhask []                2.12e3   1.30e2   7.80e1   7.53e1   1.30e2
-numhask Vector            1.44e4   6.07e3   6.46e3   5.22e3   1.45e4
-HMatrix                   1.01e5   2.22e3   1.33e3   1.79e3   2.81e3
-DLA                       5.96e4   5.61e4   8.83e4   5.65e4   7.68e4
+numhask []                1.15e6   1.45e6   1.07e6   1.11e6   1.22e6
+numhask Vector            1.33e6   1.28e6   1.08e6   1.20e6   1.36e6
+HMatrix                   6.49e5   6.41e3   9.32e3   2.07e3   9.09e3
+DLA                       9.46e4   9.06e4   1.19e5   5.83e4   1.08e5
 ```
 
 ```
@@ -29,8 +29,8 @@ vector inner product size: 10
 <.>, randoms
 run                        first      2nd      3rd   median      av.
 
-numhask []                1.52e4   5.83e3   5.49e3   4.53e3   7.65e3
-numhask Vector            1.51e4   5.52e3   4.98e3   4.62e3   5.11e3
-HMatrix                   1.16e4   2.21e3   1.01e3   1.26e3   3.74e3
-DLA (row by column)       2.37e3   7.56e2   6.94e2   6.52e2   7.15e2
+numhask []                7.36e4   6.86e3   6.10e3   5.11e3   1.46e4
+numhask Vector            2.27e4   6.32e3   5.70e3   4.76e3   8.77e3
+HMatrix                   1.48e4   1.61e3   1.50e3   1.22e3   1.35e3
+DLA (row by column)       3.30e3   7.40e2   7.28e2   6.76e2   7.22e2
 ```
