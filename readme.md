@@ -12,6 +12,15 @@ recipe
 
     stack build --exec "$(stack path --local-install-root)/bin/numhask-bench"
 
+solo:
+
+    stack exec "ghc" -- -O2 -rtsopts bench/mmult.lhs
+    ./bench/mmult +RTS -s -RTS --runs 1000
+
+profiling:
+
+    stack build --profile
+
 reference
 ---------
 

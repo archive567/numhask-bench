@@ -1,26 +1,20 @@
+
 Current Development
--------------------
+---
 
 Vector Inner Product
 
-| run                     |       2|      10|     100|
-|:------------------------|-------:|-------:|-------:|
-| Numeric.LinearAlgebra.R |  8.17e2|  8.21e2|  8.78e2|
-| Data.Vector             |  9.62e1|  4.02e2|  8.18e3|
-| NumHask.Array.Fixed     |  5.32e1|  1.41e2|  1.48e3|
+```{.output .inner}
+```
 
 Matrix Multiplication
-
-| run                     |      10|
-|:------------------------|-------:|
-| NumHask.Array.Fixed     |  3.77e4|
-| Numeric.LinearAlgebra.R |  1.31e3|
-| Statistics.Matrix.Fast  |  6.13e3|
+```{.output .mmult}
+```
 
 code
-====
+===
 
-``` {.haskell}
+\begin{code}
 
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DataKinds #-}
@@ -39,9 +33,8 @@ code
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 import qualified Protolude as P
-import NumHask.Array.Fixed as NAF
-import NumHask.Array.Dynamic as NAD
-import qualified NumHask.Array.HMatrix as NAH
+import NumHask.Array.Simple as A
+import NumHask.Vector as VNH
 import NumHask.Prelude as NH
 import Options.Generic
 import Perf
@@ -84,11 +77,10 @@ main = do
   let tdotv x = ticks n (sum . V.zipWith (*) x) x
   let tdota x = ticks n (x NH.<.>) x
   let tdoth x = ticks n (x H.<.>) x
-  let tdotnah x = ticks n (x NH.<.>) x
 
   -- size = 2
   let !vv2 = V.fromList [1..2] :: V.Vector Double
-  let !va2 = fromList [1 .. 2] :: NAF.Array '[2] Double
+  let !va2 = fromList [1 ..] :: VNH.Vector 2 Double
   let !vh2 = H.fromList [1 :: H.R .. 2]
 
   rv2 <- tdotv vv2
@@ -97,7 +89,7 @@ main = do
 
   -- size = 10
   let !vv10 = V.fromList [1..10] :: V.Vector Double
-  let !va10 = fromList [1 .. 10] :: NAF.Array '[10] Double
+  let !va10 = fromList [1 ..] :: VNH.Vector 10 Double
   let !vh10 = H.fromList [1 :: H.R .. 10]
 
   rv10 <- tdotv vv10
@@ -106,51 +98,41 @@ main = do
 
   -- size = 100
   let !vv100 = V.fromList [1..100] :: V.Vector Double
-  let !va100 = fromList [1 .. 100] :: NAF.Array '[100] Double
-  let !vnah100 = fromList [1 .. 100] :: NAH.HArray '[100] Double
+  let !va100 = fromList [1 ..] :: VNH.Vector 100 Double
+  let !va100' = fromList [1 ..] :: A.Array '[100] Double
   let !vh100 = H.fromList [1 :: H.R .. 100]
 
   rv100 <- tdotv vv100
   ra100 <- tdota va100
+  ra100' <- tdota va100'
   rh100 <- tdoth vh100
-  rnah100 <- tdotnah vnah100
 
-  putStrLn ("dot product n=100 "::Text)
+  putStrLn ("dot product"::Text)
   putStrLn $
     bool
     ("mismatched results for dot" :: Text)
     "dot results are equal"
     (snd rv100 == snd ra100 && snd rv100 == snd rh100)
+  putStrLn $ ("numhask " :: Text) <> formatF 2 (percentile 0.5 (fst ra100))
+  putStrLn $ ("numhask' " :: Text) <> formatF 2 (percentile 0.5 (fst ra100'))
+  putStrLn $ ("hmatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rh100))
 
-  putStrLn $ ("Numeric.LinearAlgebra.R " :: Text) <> formatF 2 (percentile 0.5 (fst rh100))
-  putStrLn $ ("Data.Vector " :: Text) <> formatF 2 (percentile 0.5 (fst rv100))
-  putStrLn $ ("NumHask.Array.Simple " :: Text) <> formatF 2 (percentile 0.5 (fst ra100))
-  putStrLn $ ("NumHask.Array.HMatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rnah100))
-
-  let ma x = ticks n (x `NAF.mmult`) x
-  let mnad x = ticks n (x `NAD.mmult`) x
-  let mnah x = ticks n (x `NAH.mmult`) x
+  let ma x = ticks n (x `mmult`) x
   let mh x = ticks n (x H.<>) x
   let md x = ticks n (DLAF.multiply x) x
 
-  let !ma10 = [1 .. 100] :: NAF.Array '[10, 10] Double
-  let !mnah10 = [1 .. 100] :: NAH.HArray '[10, 10] Double
-  let !mnad10 = fromFlatList [10,10] [1 .. 100] :: NAD.DArray Double
+  let !ma10 = [1 ..] :: A.Array '[10, 10] Double
   let !mh10 = (10 H.>< 10) [1 :: H.R ..]
   let !md10 = DLA.fromList 10 10 [1 .. (fromIntegral $ (10 :: Int) * 10)]
 
   rma10 <- ma ma10
   rmh10 <- mh mh10
   rmd10 <- md md10
-  rmnah10 <- mnah mnah10
-  rmnad10 <- mnad mnad10
 
-  putStrLn ("mmult 10x10" :: Text)
-  putStrLn $ ("Numeric.LinearAlgebra.R " :: Text) <> formatF 2 (percentile 0.5 (fst rmh10))
-  putStrLn $ ("NumHask.Array.Fixed " :: Text) <> formatF 2 (percentile 0.5 (fst rma10))
-  putStrLn $ ("Statistics.Matrix.Fast " :: Text) <> formatF 2 (percentile 0.5 (fst rmd10))
-  putStrLn $ ("NumHask.Array.HMatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rmnah10))
-  putStrLn $ ("NumHask.Array.Dynamic " :: Text) <> formatF 2 (percentile 0.5 (fst rmnad10))
+  putStrLn ("mmult" :: Text)
+  putStrLn $ ("numhask " :: Text) <> formatF 2 (percentile 0.5 (fst rma10))
+  putStrLn $ ("hmatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rmh10))
+  putStrLn $ ("dla " :: Text) <> formatF 2 (percentile 0.5 (fst rmd10))
 
   void $ runOutput
     ("bench/bench.lhs", LHS)
@@ -158,19 +140,19 @@ main = do
 
     output "inner" $ Native
       [formatRunsMedian ["2", "10", "100"]
-       [ ("Numeric.LinearAlgebra.R", [fst rh2, fst rh10, fst rh100])
-       , ("Data.Vector", [fst rv2, fst rv10, fst rv100])
-       , ("NumHask.Array.Fixed", [fst ra2, fst ra10, fst ra100])
+       [ ("vector", [fst rv2, fst rv10, fst rv100])
+       , ("numhask vector", [fst ra2, fst ra10, fst ra100])
+       , ("hmatrix", [fst rh2, fst rh10, fst rh100])
        ]
       ]
 
     output "mmult" $ Native
       [formatRunsMedian ["10"]
-       [ ("NumHask.Array.Fixed", [fst rma10])
-       , ("Numeric.LinearAlgebra.R", [fst rmh10])
-       , ("Statistics.Matrix.Fast", [fst rmd10])
+       [ ("numhask", [fst rma10])
+       , ("hmatrix", [fst rmh10])
+       , ("dla", [fst rmd10])
        ]
       ]
 
   pure ()
-```
+\end{code}

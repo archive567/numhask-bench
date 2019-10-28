@@ -1,3 +1,19 @@
+
+Current Development
+---
+
+Vector Inner Product
+
+```{.output .inner}
+```
+
+Matrix Multiplication
+```{.output .mmult}
+```
+
+code
+===
+
 \begin{code}
 
 {-# LANGUAGE BangPatterns #-}
@@ -10,89 +26,42 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wall #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 import qualified Protolude as P
-import NumHask.Array
-import NumHask.Prelude
+import NumHask.Array.Fixed as NAF
+import NumHask.Array.Dynamic as NAD
+import qualified NumHask.Array.HMatrix as NAH
+import NumHask.Prelude as NH
 import Options.Generic
 import Perf
 import Perf.Analysis
 import qualified Numeric.LinearAlgebra as H
 import qualified Data.Vector as V
-import qualified Statistics.Matrix as DLA
-import System.Random.MWC
 import Readme.Lhs
+import qualified Statistics.Matrix.Fast as DLAF
+import qualified Statistics.Matrix as DLA
 
-instance NFData DLA.Matrix where
-  rnf m = seq m ()
+-- | format a run median
+formatMedian :: (P.Integral a) => Text -> [[a]] -> [Text]
+formatMedian label xss =
+  [label] <>
+  ((formatF 2 . percentile 0.5) <$> xss)
 
-oneRunList10 g f = do
-  ra <- sequence $ replicate 100 (uniform g :: IO Double)
-  rb <- sequence $ replicate 100 (uniform g :: IO Double)
-  let !aa = fromList ra :: Array [] '[10, 10] Double
-  let ab = fromList rb :: Array [] '[10, 10] Double
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
-
-oneRunVector10 g f = do
-  ra <- sequence $ replicate 100 (uniform g :: IO Double)
-  rb <- sequence $ replicate 100 (uniform g :: IO Double)
-  let !aa = fromList ra :: Array V.Vector '[10, 10] Double
-  let ab = fromList rb :: Array V.Vector '[10, 10] Double
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
-
-oneRunHMatrix g f sz = do
-  ra <- sequence $ replicate (sz*sz) (uniform g :: IO Double)
-  rb <- sequence $ replicate (sz*sz) (uniform g :: IO Double)
-  let !aa = H.matrix sz ra
-  let !ab = H.matrix sz rb
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
-
-oneRunDLA g f sz = do
-  ra <- sequence $ replicate (sz*sz) (uniform g :: IO Double)
-  rb <- sequence $ replicate (sz*sz) (uniform g :: IO Double)
-  let !aa = DLA.fromList sz sz ra
-  let !ab = DLA.fromList sz sz rb
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
-
-oneRunListV10 g f = do
-  ra <- sequence $ replicate 10 (uniform g :: IO Double)
-  rb <- sequence $ replicate 10 (uniform g :: IO Double)
-  let !aa = fromList ra :: Array [] '[10] Double
-  let !ab = fromList rb :: Array [] '[10] Double
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
-
-oneRunVectorV10 g f = do
-  ra <- sequence $ replicate 10 (uniform g :: IO Double)
-  rb <- sequence $ replicate 10 (uniform g :: IO Double)
-  let !aa = fromList ra :: Array V.Vector '[10] Double
-  let !ab = fromList rb :: Array V.Vector '[10] Double
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
-
-oneRunHMatrixV g f sz = do
-  ra <- sequence $ replicate sz (uniform g :: IO Double)
-  rb <- sequence $ replicate sz (uniform g :: IO Double)
-  let !aa = H.vector ra
-  let !ab = H.vector rb
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
-
-oneRunDLAV g f sz = do
-  ra <- sequence $ replicate sz (uniform g :: IO Double)
-  rb <- sequence $ replicate sz (uniform g :: IO Double)
-  let !aa = DLA.fromList 1 sz ra
-  let !ab = DLA.fromList sz 1 rb
-  (res, r) <- tickNoinline (f aa) ab
-  pure (res, r)
+formatRunsMedian :: (P.Integral a) => [Text] -> [(Text, [[a]])] -> Block
+formatRunsMedian h rs =
+  table
+  mempty
+  (["run"] <> h)
+  ([AlignLeft] <> replicate n AlignRight)
+  []
+  (fmap (\(l,as) -> formatMedian l as) rs)
+  where
+    n = length h
 
 newtype Opts = Opts
   { runs :: Maybe Int -- <?> "number of runs"
@@ -105,141 +74,97 @@ main = do
   o :: Opts <- getRecord "benchmarking numhask array"
   let !n = fromMaybe 100 (runs o)
   _ <- warmup 100
-  g <- create
 
-  -- sz = 10 run
-  let sz = 10 :: Int
+  let tdotv x = ticks n (sum . V.zipWith (*) x) x
+  let tdota x = ticks n (x NH.<.>) x
+  let tdoth x = ticks n (x H.<.>) x
+  let tdotnah x = ticks n (x NH.<.>) x
 
-  -- there is no way to avoid the hardcode :(
-  let !aa = [1 ..] :: Array [] '[10, 10] Double
-  let !ab = [0 ..] :: Array [] '[10, 10] Double
+  -- size = 2
+  let !vv2 = V.fromList [1..2] :: V.Vector Double
+  let !va2 = fromList [1 .. 2] :: NAF.Array '[2] Double
+  let !vh2 = H.fromList [1 :: H.R .. 2]
 
-  let !va = [1 ..] :: Array V.Vector '[10, 10] Double
-  let !vb = [0 ..] :: Array V.Vector '[10, 10] Double
+  rv2 <- tdotv vv2
+  ra2 <- tdota va2
+  rh2 <- tdoth vh2
 
-  let !ha = (sz H.>< sz) [1 :: H.Z ..]
-  let !hb = (sz H.>< sz) [1 :: H.Z ..]
+  -- size = 10
+  let !vv10 = V.fromList [1..10] :: V.Vector Double
+  let !va10 = fromList [1 .. 10] :: NAF.Array '[10] Double
+  let !vh10 = H.fromList [1 :: H.R .. 10]
 
-  let !dlaa = DLA.fromList sz sz [1 .. (fromIntegral $ sz*sz)]
-  let !dlab = DLA.fromList sz sz [0 .. (fromIntegral $ sz*sz - 1)]
+  rv10 <- tdotv vv10
+  ra10 <- tdota va10
+  rh10 <- tdoth vh10
 
-  (rmmult, _) <- ticks n (NumHask.Array.mmult aa) ab
-  (rmmulth, _) <- ticks n (ha H.<>) hb
-  (rmmultv, _) <- ticks n (NumHask.Array.mmult va) vb
-  (rmmultdla, _) <- ticks n (DLA.multiply dlaa) dlab
+  -- size = 100
+  let !vv100 = V.fromList [1..100] :: V.Vector Double
+  let !va100 = fromList [1 .. 100] :: NAF.Array '[100] Double
+  let !vnah100 = fromList [1 .. 100] :: NAH.HArray '[100] Double
+  let !vh100 = H.fromList [1 :: H.R .. 100]
 
+  rv100 <- tdotv vv100
+  ra100 <- tdota va100
+  rh100 <- tdoth vh100
+  rnah100 <- tdotnah vnah100
 
-  xList <- sequence $ replicate n (oneRunList10 g mmult)
-  print $ sum $ sum $ fmap snd xList
-  xVec <- sequence $ replicate n (oneRunVector10 g mmult)
-  print $ sum $ sum $ fmap snd xVec
-  xH <- sequence $ replicate n (oneRunHMatrix g (H.<>) sz)
-  print $ P.sum $ fmap P.sum $ fmap (fmap P.sum) $ fmap H.toLists $ fmap snd xH
-  xDLA <- sequence $ replicate n (oneRunDLA g DLA.multiply sz)
-  print $ sum $ fmap sum $ fmap (fmap sum) $ fmap DLA.toRowLists $ fmap snd xDLA
+  putStrLn ("dot product n=100 "::Text)
+  putStrLn $
+    bool
+    ("mismatched results for dot" :: Text)
+    "dot results are equal"
+    (snd rv100 == snd ra100 && snd rv100 == snd rh100)
 
-  xListV <- sequence $ replicate n (oneRunListV10 g (<.>))
-  print $ sum $ fmap snd xList
-  xVecV <- sequence $ replicate n (oneRunVectorV10 g (<.>))
-  print $ sum $ fmap snd xVec
-  xHV <- sequence $ replicate n (oneRunHMatrixV g (H.<.>) sz)
-  print $ P.sum $ fmap snd xH
-  xDLAV <- sequence $ replicate n (oneRunDLAV g DLA.multiply sz)
-  print $ sum $ fmap sum $ fmap (fmap sum) $ fmap DLA.toRowLists $ fmap snd xDLA
-  
-  -- numhask operations
-  (rrow, _) <- ticks n (NumHask.Array.row (Proxy :: Proxy 4)) ab
-  (rcol, _) <- ticks n (NumHask.Array.col (Proxy :: Proxy 4)) ab
-  (runsaferow, _) <- ticks n (NumHask.Array.unsafeRow 0) ab
-  (runsafecol, _) <- ticks n (NumHask.Array.unsafeCol 0) ab
-  (runsafeindex, _) <- ticks n (NumHask.Array.unsafeIndex ab) [2, 3]
-  (rconcat, _) <- ticks n (concatenate (Proxy :: Proxy 2) aa) aa
-  (rtranspose, _) <- ticks n NumHask.Array.transpose aa
+  putStrLn $ ("Numeric.LinearAlgebra.R " :: Text) <> formatF 2 (percentile 0.5 (fst rh100))
+  putStrLn $ ("Data.Vector " :: Text) <> formatF 2 (percentile 0.5 (fst rv100))
+  putStrLn $ ("NumHask.Array.Simple " :: Text) <> formatF 2 (percentile 0.5 (fst ra100))
+  putStrLn $ ("NumHask.Array.HMatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rnah100))
+
+  let ma x = ticks n (x `NAF.mmult`) x
+  let mnad x = ticks n (x `NAD.mmult`) x
+  let mnah x = ticks n (x `NAH.mmult`) x
+  let mh x = ticks n (x H.<>) x
+  let md x = ticks n (DLAF.multiply x) x
+
+  let !ma10 = [1 .. 100] :: NAF.Array '[10, 10] Double
+  let !mnah10 = [1 .. 100] :: NAH.HArray '[10, 10] Double
+  let !mnad10 = fromFlatList [10,10] [1 .. 100] :: NAD.DArray Double
+  let !mh10 = (10 H.>< 10) [1 :: H.R ..]
+  let !md10 = DLA.fromList 10 10 [1 .. (fromIntegral $ (10 :: Int) * 10)]
+
+  rma10 <- ma ma10
+  rmh10 <- mh mh10
+  rmd10 <- md md10
+  rmnah10 <- mnah mnah10
+  rmnad10 <- mnad mnad10
+
+  putStrLn ("mmult 10x10" :: Text)
+  putStrLn $ ("Numeric.LinearAlgebra.R " :: Text) <> formatF 2 (percentile 0.5 (fst rmh10))
+  putStrLn $ ("NumHask.Array.Fixed " :: Text) <> formatF 2 (percentile 0.5 (fst rma10))
+  putStrLn $ ("Statistics.Matrix.Fast " :: Text) <> formatF 2 (percentile 0.5 (fst rmd10))
+  putStrLn $ ("NumHask.Array.HMatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rmnah10))
+  putStrLn $ ("NumHask.Array.Dynamic " :: Text) <> formatF 2 (percentile 0.5 (fst rmnad10))
 
   void $ runOutput
     ("bench/bench.lhs", LHS)
     ("bench.md", GitHubMarkdown) $ do
 
-    output "mmult" $ Native $
-      [ plain ("square matrix size: " <> show sz)
-      ] <>
-      [formatRuns 3 2
-       [ ("numhask", rmmult)
-       , ("numhask boxed", rmmultv)
-       , ("hmatrix", rmmulth)
-       , ("DLA", rmmultdla)
+    output "inner" $ Native
+      [formatRunsMedian ["2", "10", "100"]
+       [ ("Numeric.LinearAlgebra.R", [fst rh2, fst rh10, fst rh100])
+       , ("Data.Vector", [fst rv2, fst rv10, fst rv100])
+       , ("NumHask.Array.Fixed", [fst ra2, fst ra10, fst ra100])
        ]
       ]
 
-    output "random-mmult" $ Native $
-      [ plain ("square matrix size: " <> show sz)
-      ] <>
-      [formatRuns 3 2
-       [ ("numhask", fmap fst xList)
-       , ("numhask boxed", fmap fst xVec)
-       , ("hmatrix", fmap fst xH)
-       , ("DLA", fmap fst xDLA)
-       ]
-      ]
-
-    output "random-mmult-vector" $ Native $
-      [ plain ("square matrix size: " <> show sz)
-      ] <>
-      [formatRuns 3 2
-       [ ("numhask", fmap fst xListV)
-       , ("numhask boxed", fmap fst xVecV)
-       , ("hmatrix", fmap fst xHV)
-       , ("DLA", fmap fst xDLAV)
-       ]
-      ]
-
-    output "ops" $ Native $
-      [ plain ("square matrix size: " <> show sz)
-      ] <>
-      [formatRuns 3 2
-       [ ("row", rrow)
-       , ("col", rcol)
-       , ("unsafeRow", runsaferow)
-       , ("unsafeCol", runsafecol)
-       , ("unsafeIndex", runsafeindex)
-       , ("unsafeIndex", runsafeindex)
-       , ("concat", rconcat)
-       , ("transpose", rtranspose)
+    output "mmult" $ Native
+      [formatRunsMedian ["10"]
+       [ ("NumHask.Array.Fixed", [fst rma10])
+       , ("Numeric.LinearAlgebra.R", [fst rmh10])
+       , ("Statistics.Matrix.Fast", [fst rmd10])
        ]
       ]
 
   pure ()
 \end{code}
-
-
-results
-===
-
-array performance
------------------
-
-The first runs compares creation of a 10x10 matrix and matrix
-multiplication for:
-
--   A NumHask.Array instance with list as a container
--   A NumHask.Array instance with a boxed vector instance
--   [hmatrix](http://hackage.haskell.org/package/hmatrix)
--   [dense-linear-algebra](http://hackage.haskell.org/package/dense-linear-algebra)
-
-```{.output .mmult}
-```
-
-Using random numbers
-
-```{.output .random-mmult}
-```
-
-inner product
-
-```{.output .random-mmult-vector}
-```
-
-operations
-
-```{.output .ops}
-```
