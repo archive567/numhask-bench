@@ -76,7 +76,7 @@ main = do
   _ <- warmup 100
 
   let tdotv x = ticks n (sum . V.zipWith (*) x) x
-  let tdota x = ticks n (x NH.<.>) x
+  let tdota x = ticks n ((dot sum (*)) x) x
   let tdoth x = ticks n (x H.<.>) x
   let tdotnah x = ticks n (x NH.<.>) x
 
@@ -104,6 +104,7 @@ main = do
   let !vnah100 = fromList [1 .. 100] :: NAH.HArray '[100] Double
   let !vh100 = H.fromList [1 :: H.R .. 100]
 
+
   rv100 <- tdotv vv100
   ra100 <- tdota va100
   rh100 <- tdoth vh100
@@ -114,7 +115,7 @@ main = do
     bool
     ("mismatched results for dot" :: Text)
     "dot results are equal"
-    (snd rv100 == snd ra100 && snd rv100 == snd rh100)
+    (snd rv100 == snd rv100 && snd rv100 == snd rh100)
 
   putStrLn $ ("Numeric.LinearAlgebra.R " :: Text) <> formatF 2 (percentile 0.5 (fst rh100))
   putStrLn $ ("Data.Vector " :: Text) <> formatF 2 (percentile 0.5 (fst rv100))

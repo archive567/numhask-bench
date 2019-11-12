@@ -5,17 +5,17 @@ Vector Inner Product
 
 | run                     |       2|      10|     100|
 |:------------------------|-------:|-------:|-------:|
-| Numeric.LinearAlgebra.R |  8.17e2|  8.21e2|  8.78e2|
-| Data.Vector             |  9.62e1|  4.02e2|  8.18e3|
-| NumHask.Array.Fixed     |  5.32e1|  1.41e2|  1.48e3|
+| Numeric.LinearAlgebra.R |  8.34e2|  8.21e2|  8.24e2|
+| Data.Vector             |  8.66e1|  4.04e2|  9.12e3|
+| NumHask.Array.Fixed     |  7.76e1|  8.83e1|  9.01e1|
 
 Matrix Multiplication
 
 | run                     |      10|
 |:------------------------|-------:|
-| NumHask.Array.Fixed     |  3.77e4|
-| Numeric.LinearAlgebra.R |  1.31e3|
-| Statistics.Matrix.Fast  |  6.13e3|
+| NumHask.Array.Fixed     |  3.82e4|
+| Numeric.LinearAlgebra.R |  1.58e3|
+| Statistics.Matrix.Fast  |  5.50e3|
 
 code
 ====
@@ -82,7 +82,7 @@ main = do
   _ <- warmup 100
 
   let tdotv x = ticks n (sum . V.zipWith (*) x) x
-  let tdota x = ticks n (x NH.<.>) x
+  let tdota x = ticks n ((dot sum (*)) x) x
   let tdoth x = ticks n (x H.<.>) x
   let tdotnah x = ticks n (x NH.<.>) x
 
@@ -110,6 +110,7 @@ main = do
   let !vnah100 = fromList [1 .. 100] :: NAH.HArray '[100] Double
   let !vh100 = H.fromList [1 :: H.R .. 100]
 
+
   rv100 <- tdotv vv100
   ra100 <- tdota va100
   rh100 <- tdoth vh100
@@ -120,7 +121,7 @@ main = do
     bool
     ("mismatched results for dot" :: Text)
     "dot results are equal"
-    (snd rv100 == snd ra100 && snd rv100 == snd rh100)
+    (snd rv100 == snd rv100 && snd rv100 == snd rh100)
 
   putStrLn $ ("Numeric.LinearAlgebra.R " :: Text) <> formatF 2 (percentile 0.5 (fst rh100))
   putStrLn $ ("Data.Vector " :: Text) <> formatF 2 (percentile 0.5 (fst rv100))
