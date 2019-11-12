@@ -25,3 +25,5 @@ extra-deps:
       - perf
       - perf-analysis
       - perf-criterion
+
+allow-newer: true
