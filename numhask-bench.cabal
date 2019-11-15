@@ -34,7 +34,7 @@ source-repository head
 
 executable numhask-bench
   main-is:
-    bench.lhs
+    bench.hs
   hs-source-dirs:
     bench
   default-extensions:

@@ -4,8 +4,7 @@ numhask-bench
 [![Build
 Status](https://travis-ci.org/tonyday567/numhask-bench.png)](https://travis-ci.org/tonyday567/numhask-bench)
 
-See [bench.md](bench.md) for current results.
-
+See [results.md](results.md) for current performance numbers.
 
 recipe
 ------

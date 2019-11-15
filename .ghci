@@ -1,0 +1,4 @@
+:set -XFlexibleContexts
+:set -XBangPatterns
+:set -XDataKinds
+:set -XOverloadedLists
