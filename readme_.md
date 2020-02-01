@@ -27,4 +27,4 @@ reference
 
 -   [perf](https://hackage.haskell.org/package/perf)
 -   [numhask-array](https://hackage.haskell.org/package/numhask-array)
-
+-   https://stackoverflow.com/questions/11768656/reasonably-efficient-pure-functional-matrix-product-in-haskell
