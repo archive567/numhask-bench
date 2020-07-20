@@ -7,6 +7,7 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeOperators #-}
 {-# OPTIONS_GHC -Wall #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -18,30 +19,15 @@ import qualified Data.Vector as V
 import qualified NumHask.Array.Dynamic as D
 import qualified NumHask.Array.Fixed as F
 import qualified NumHask.Array.HMatrix as H
+import qualified NumHask.Array.Massiv as M
 import NumHask.Prelude as NH
 import qualified Numeric.LinearAlgebra as HMatrix
 import Options.Generic
 import Perf
-import Perf.Analysis
-import qualified Protolude as P
 import Readme.Lhs
-
--- | format a run median
-formatMedian :: (P.Integral a) => Text -> [[a]] -> [Text]
-formatMedian label xss =
-  [label]
-    <> (formatF 2 . percentile 0.5 <$> xss)
-
-formatRunsMedian :: (P.Integral a) => [Text] -> [(Text, [[a]])] -> Block
-formatRunsMedian h rs =
-  table
-    mempty
-    (["run"] <> h)
-    ([AlignLeft] <> replicate n AlignRight)
-    []
-    (fmap (uncurry formatMedian) rs)
-  where
-    n = length h
+import Readme.Format
+import NumHask.Prelude as P
+import qualified Text.Pandoc.Builder as Pandoc
 
 newtype Opts
   = Opts
@@ -70,40 +56,16 @@ main = do
   rmnah10 <- mnah mnah10
   rmnad10 <- mnad mnad10
   putStrLn ("mmult 10x10" :: Text)
-  putStrLn $ ("hmatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rmh10))
-  putStrLn $ ("Fixed " :: Text) <> formatF 2 (percentile 0.5 (fst rma10))
-  putStrLn $ ("HMatrix " :: Text) <> formatF 2 (percentile 0.5 (fst rmnah10))
-  putStrLn $ ("Dynamic " :: Text) <> formatF 2 (percentile 0.5 (fst rmnad10))
+  putStrLn $ ("hmatrix " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmh10))
+  putStrLn $ ("Fixed " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rma10))
+  putStrLn $ ("HMatrix " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmnah10))
+  putStrLn $ ("Dynamic " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmnad10))
 
   r2 <- dot100 2
   r100 <- dot100 100
 
-  void
-    $ runOutput
-      ("readme_.md", GitHubMarkdown)
-      ("readme.md", GitHubMarkdown)
-    $ do
-      output "values" $ Native $ (: []) $
-        bool
-          (table mempty [] [] [] [[Text.pack . show <$> fst $ r100]])
-          (Para [Str "results agree"])
-          (and $ (==) <$> fst r100 <*> fst r100)
-      output "inner" $
-        Native
-          [ formatRunsMedian
-              ["2", "100"]
-              (zip ["NumHask.Array.Fixed", "NumHask.Array.Dynamic", "vector"] $ P.transpose [snd r2, snd r100])
-          ]
-      output "mmult" $
-        Native
-          [ formatRunsMedian
-              ["10"]
-              [ ("NumHask.Array.Fixed", [fst rma10]),
-                ("NumHask.Array.Dynamic", [fst drma10]),
-                ("NumHask.Array.HMatrix", [fst hrma10]),
-                ("Numeric.LinearAlgebra.R", [fst rmh10])
-              ]
-          ]
+  pure ()
+
 
 tdotnaf n x = ticks n (F.dot sum (+) x) x
 tdotnad n x = ticks n (D.dot sum (+) x) x
@@ -111,7 +73,7 @@ tdotv n x = ticks n (sum . V.zipWith (*) x) x
 
 dot100 :: Int -> IO ([Double], [[Cycle]])
 dot100 n = do
-  let !vnaf = fromList [1 .. 100] :: F.Array '[100] Double
+  let !vnaf = P.fromList [1 .. 100] :: F.Array '[100] Double
   let !vnad = D.fromFlatList [100] [1 .. 100] :: D.Array Double
   let !vv = V.fromList [1 .. 100] :: V.Vector Double
   (pnaf, rnaf) <- tdotnaf n vnaf

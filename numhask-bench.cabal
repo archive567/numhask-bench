@@ -1,5 +1,5 @@
 name: numhask-bench
-version: 0.0.1
+version: 0.0.2
 synopsis:
   See readme.md
 description:
@@ -28,9 +28,7 @@ source-repository head
   type:
     git
   location:
-    https://github.com/tonyday567/numhask
-  subdir:
-    numhask-array
+    https://github.com/tonyday567/numhask-bench
 
 executable numhask-bench
   main-is:
@@ -54,13 +52,11 @@ executable numhask-bench
     , hmatrix
     , adjunctions
     , mwc-random
-    , numhask
-    , numhask-array
-    , numhask-prelude >= 0.3 && < 0.4
+    , numhask >= 0.6 && < 0.7
+    , numhask-array >= 0.7 && < 0.8
     , optparse-generic
-    , perf >= 0.4.1.0
-    , perf-analysis >= 0.0.1.1
-    , protolude
+    , pandoc-types >= 1.21
+    , perf >=0.7 && < 0.8
     , text
     , vector
     , readme-lhs
