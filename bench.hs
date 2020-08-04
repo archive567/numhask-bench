@@ -42,14 +42,18 @@ main = do
   let !n = 100
   _ <- warmup 100
   let ma x = ticks n (x `F.mmult`) x
+  let mam x = ticks n (M.dot sum (*) x) x
   let mnad x = ticks n (x `D.mmult`) x
   let mnah x = ticks n (x `H.mmult`) x
   let mh x = ticks n (x HMatrix.<>) x
   let !ma10 = [1 .. 100] :: F.Array '[10, 10] Double
+  let !mam10 = [1 .. 100] :: M.Array '[10, 10] Double
+  let !mnah10 = [1 .. 100] :: H.Array '[10, 10] Double
   let !mnah10 = [1 .. 100] :: H.Array '[10, 10] Double
   let !mnad10 = D.fromFlatList [10, 10] [1 .. 100] :: D.Array Double
   let !mh10 = (10 HMatrix.>< 10) [1 :: HMatrix.R ..]
   rma10 <- ma ma10
+  mma10 <- mam mam10
   drma10 <- mnad (F.toDynamic ma10)
   hrma10 <- mnah mnah10
   rmh10 <- mh mh10
@@ -58,6 +62,7 @@ main = do
   putStrLn ("mmult 10x10" :: Text)
   putStrLn $ ("hmatrix " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmh10))
   putStrLn $ ("Fixed " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rma10))
+  putStrLn $ ("Massive " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst mma10))
   putStrLn $ ("HMatrix " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmnah10))
   putStrLn $ ("Dynamic " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmnad10))
 
