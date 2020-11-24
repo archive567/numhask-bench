@@ -14,28 +14,18 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 
-import qualified Data.Text as Text
 import qualified Data.Vector as V
 import qualified NumHask.Array.Dynamic as D
 import qualified NumHask.Array.Fixed as F
 import qualified NumHask.Array.HMatrix as H
-import qualified NumHask.Array.Massiv as M
+import qualified NumHask.Array.Massive as M
 import NumHask.Prelude as NH
+import NumHask.Space (quantile)
 import qualified Numeric.LinearAlgebra as HMatrix
-import Options.Generic
 import Perf
-import Readme.Lhs
-import Readme.Format
+import Data.FormatN
 import NumHask.Prelude as P
-import qualified Text.Pandoc.Builder as Pandoc
-
-newtype Opts
-  = Opts
-      { runs :: Maybe Int -- <?> "number of runs"
-      }
-  deriving (Generic, Show)
-
-instance ParseRecord Opts
+import qualified Prelude
 
 main :: IO ()
 main = do
@@ -53,18 +43,19 @@ main = do
   let !mnad10 = D.fromFlatList [10, 10] [1 .. 100] :: D.Array Double
   let !mh10 = (10 HMatrix.>< 10) [1 :: HMatrix.R ..]
   rma10 <- ma ma10
-  mma10 <- mam mam10
+  -- FIXME: NFData instance needed
+  -- mma10 <- mam mam10
   drma10 <- mnad (F.toDynamic ma10)
   hrma10 <- mnah mnah10
   rmh10 <- mh mh10
   rmnah10 <- mnah mnah10
   rmnad10 <- mnad mnad10
   putStrLn ("mmult 10x10" :: Text)
-  putStrLn $ ("hmatrix " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmh10))
-  putStrLn $ ("Fixed " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rma10))
-  putStrLn $ ("Massive " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst mma10))
-  putStrLn $ ("HMatrix " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmnah10))
-  putStrLn $ ("Dynamic " :: Text) <> fixed 2 (percentile 0.5 (fromIntegral <$> fst rmnad10))
+  putStrLn $ ("hmatrix " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmh10))
+  putStrLn $ ("Fixed " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rma10))
+  -- putStrLn $ ("Massive " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst mma10))
+  putStrLn $ ("HMatrix " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmnah10))
+  putStrLn $ ("Dynamic " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmnad10))
 
   r2 <- dot100 2
   r100 <- dot100 100

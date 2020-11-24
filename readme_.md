@@ -1,15 +1,11 @@
 Current Performance
 ---
 
-dot
-
-```{.output .inner}
-```
-
-mmult
-
-```{.output .mmult}
-```
+mmult 10x10
+hmatrix 1115.00
+Fixed 66786.92
+HMatrix 1627.10
+Dynamic 108337.39
 
 numhask-bench
 =============

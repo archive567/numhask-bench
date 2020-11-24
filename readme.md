@@ -1,22 +1,11 @@
 Current Performance
 -------------------
 
-dot
-
-| run                   |       2|     100|
-|:----------------------|-------:|-------:|
-| NumHask.Array.Fixed   |  3.26e6|  1.04e6|
-| NumHask.Array.Dynamic |  2.84e6|  3.08e6|
-| vector                |  4.12e3|  3.50e3|
-
-mmult
-
-| run                     |      10|
-|:------------------------|-------:|
-| NumHask.Array.Fixed     |  3.83e4|
-| NumHask.Array.Dynamic   |  5.08e4|
-| NumHask.Array.HMatrix   |  1.17e3|
-| Numeric.LinearAlgebra.R |  1.15e3|
+mmult 10x10
+hmatrix 1115.00
+Fixed 66786.92
+HMatrix 1627.10
+Dynamic 108337.39
 
 numhask-bench
 =============
