@@ -47,13 +47,15 @@ executable numhask-bench
     -Wincomplete-record-updates
     -Wincomplete-uni-patterns
     -Wredundant-constraints
+    -fwrite-ide-info
+    -hiedir=.hie
   build-depends:
       base >=4.7 && <5
     , hmatrix
     , adjunctions
     , formatn >= 0.0.1 && < 0.1
     , numhask >= 0.7 && < 0.8
-    , numhask-array >= 0.7 && < 0.8
+    , numhask-array >= 0.8 && < 0.9
     , numhask-hmatrix
     , numhask-massive
     , numhask-space >= 0.7 && < 0.8
