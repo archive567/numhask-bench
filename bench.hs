@@ -18,7 +18,6 @@ import qualified Data.Vector as V
 import qualified NumHask.Array.Dynamic as D
 import qualified NumHask.Array.Fixed as F
 import qualified NumHask.Array.HMatrix as H
-import qualified NumHask.Array.Massive as M
 import NumHask.Prelude as NH
 import NumHask.Space (quantile)
 import qualified Numeric.LinearAlgebra as HMatrix
@@ -26,18 +25,17 @@ import Perf
 import Data.FormatN
 import NumHask.Prelude as P
 import qualified Prelude
+import Data.Text (Text, unpack)
 
 main :: IO ()
 main = do
   let !n = 100
   _ <- warmup 100
   let ma x = ticks n (x `F.mmult`) x
-  let mam x = ticks n (M.dot sum (*) x) x
   let mnad x = ticks n (x `D.mmult`) x
   let mnah x = ticks n (x `H.mmult`) x
   let mh x = ticks n (x HMatrix.<>) x
   let !ma10 = [1 .. 100] :: F.Array '[10, 10] Double
-  let !mam10 = [1 .. 100] :: M.Array '[10, 10] Double
   let !mnah10 = [1 .. 100] :: H.Array '[10, 10] Double
   let !mnah10 = [1 .. 100] :: H.Array '[10, 10] Double
   let !mnad10 = D.fromFlatList [10, 10] [1 .. 100] :: D.Array Double
@@ -50,12 +48,11 @@ main = do
   rmh10 <- mh mh10
   rmnah10 <- mnah mnah10
   rmnad10 <- mnad mnad10
-  putStrLn ("mmult 10x10" :: Text)
-  putStrLn $ ("hmatrix " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmh10))
-  putStrLn $ ("Fixed " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rma10))
-  -- putStrLn $ ("Massive " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst mma10))
-  putStrLn $ ("HMatrix " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmnah10))
-  putStrLn $ ("Dynamic " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmnad10))
+  putStrLn ("mmult 10x10")
+  putStrLn $ unpack $ ("hmatrix ") <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmh10))
+  putStrLn $ unpack $ ("Fixed ") <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rma10))
+  putStrLn $ unpack $ ("HMatrix " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmnah10))
+  putStrLn $ unpack $ ("Dynamic " :: Text) <> fixed 2 (quantile 0.5 (Prelude.fromIntegral <$> fst rmnad10))
 
   r2 <- dot100 2
   r100 <- dot100 100

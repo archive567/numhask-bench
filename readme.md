@@ -2,10 +2,10 @@ Current Performance
 -------------------
 
 mmult 10x10
-hmatrix 1115.00
-Fixed 66786.92
-HMatrix 1627.10
-Dynamic 108337.39
+hmatrix 1500.89
+Fixed 2183.41
+HMatrix 1521.00
+Dynamic 2531.00
 
 numhask-bench
 =============

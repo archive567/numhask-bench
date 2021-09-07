@@ -1,0 +1,5 @@
+packages:
+  numhask-bench.cabal
+  ../perf/perf.cabal
+  ../numhask-hmatrix/numhask-hmatrix.cabal
+  ../formatn/formatn.cabal

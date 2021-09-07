@@ -36,10 +36,6 @@ executable numhask-bench
   hs-source-dirs:
     ./
   default-extensions:
-    NegativeLiterals
-    NoImplicitPrelude
-    OverloadedStrings
-    UnicodeSyntax
   ghc-options:
     -funbox-strict-fields -fforce-recomp -threaded -rtsopts -with-rtsopts=-N
     -Wall
@@ -53,13 +49,12 @@ executable numhask-bench
       base >=4.7 && <5
     , hmatrix
     , adjunctions
-    , formatn >= 0.0.1 && < 0.1
-    , numhask >= 0.7 && < 0.8
-    , numhask-array >= 0.8 && < 0.9
+    , formatn ^>= 0.1
+    , numhask ^>= 0.8.1
+    , numhask-array ^>= 0.9
     , numhask-hmatrix
-    , numhask-massive
-    , numhask-space >= 0.7 && < 0.8
-    , perf >=0.7 && < 0.8
+    , numhask-space ^>= 0.8.1
+    , perf ^>=0.8
     , text
     , vector
   default-language: Haskell2010
