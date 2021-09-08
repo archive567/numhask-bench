@@ -1,5 +1,17 @@
 packages:
   numhask-bench.cabal
-  ../perf/perf.cabal
-  ../numhask-hmatrix/numhask-hmatrix.cabal
-  ../formatn/formatn.cabal
+
+source-repository-package
+    type: git
+    location: https://github.com/tonyday567/numhask-hmatrix
+    tag: 8ad26dffce30e12bf95556318decd7a8bbd7fd97
+
+source-repository-package
+    type: git
+    location: https://github.com/tonyday567/formatn
+    tag: ab9565eb5d470b8104044c41fae650de38fa800c
+
+source-repository-package
+    type: git
+    location: https://github.com/tonyday567/perf
+    tag: 53a416ac05596608bbada46cd0f3dc1466dd6a49
