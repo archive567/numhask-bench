@@ -1,0 +1,4 @@
+cradle:
+  cabal:
+    - path: "."
+      component: "numhask-bench:exe:numhask-bench"

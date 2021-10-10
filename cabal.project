@@ -10,8 +10,3 @@ source-repository-package
     type: git
     location: https://github.com/tonyday567/formatn
     tag: ab9565eb5d470b8104044c41fae650de38fa800c
-
-source-repository-package
-    type: git
-    location: https://github.com/tonyday567/perf
-    tag: 53a416ac05596608bbada46cd0f3dc1466dd6a49

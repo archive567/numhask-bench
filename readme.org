@@ -1,0 +1,131 @@
+#+TITLE: numhask-bench
+
+Performance testing of [[https://hackage.haskell.org/package/numhask-array][numhask-array]] using [[https://hackage.haskell.org/package/perf][perf]].
+
+To install the benchmark locally:
+
+#+begin_src sh
+cabal build && cabal install
+#+end_src
+
+#+RESULTS:
+
+#+begin_src sh
+numhask-bench -r 100 -m 10 -xdv --best
+#+end_src
+
+#+RESULTS:
+| mmult           |  10x10 |
+| hmatrix         |   1312 |
+| numhask-hmatrix |   1302 |
+| Fixed           |   2723 |
+| Dynamic         |   2761 |
+| Fixed-dotsum    |   4550 |
+| Vector-dot      |   5188 |
+| Fixed-dot       |    125 |
+| Dynamic-dot     | 155006 |
+
+#+begin_src haskell
+:load bench.hs
+#+end_src
+
+#+RESULTS:
+: *Main> [1 of 1] Compiling Main             ( bench.hs, interpreted )
+: Ok, one module loaded.
+
+#+begin_src haskell
+:main -r 100 -m 10 -xdv --best
+#+end_src
+
+#+RESULTS:
+: mmult 10x10
+: hmatrix 2950
+: numhask-hmatrix 1724
+: Fixed 2080
+: Dynamic 2705
+: Fixed-dotsum 5666
+: Vector-dot 21724
+: Fixed-dot 156
+: Dynamic-dot 174800
+
+* runtime control
+
+https://downloads.haskell.org/~ghc/9.0.1/docs/html/users_guide/runtime_control.html
+
+#+begin_src sh
+numhask-bench +RTS -A128m -N2 -qn2 -Fd4 -xn
+#+end_src
+
+#+RESULTS:
+
+
+* ghci
+
+#+begin_src haskell
+:set prompt " > "
+:set -Wno-type-defaults
+:set -Wno-name-shadowing
+:set -XOverloadedStrings
+#+end_src
+
+#+begin_src haskell
+import Perf
+#+end_src
+
+#+begin_src haskell
+import Perf
+import qualified NumHask.Array.Fixed as F
+import NumHask.Space (quantile)
+import Data.FormatN
+median = fixed 0 . quantile 0.5 . fmap Prelude.fromIntegral . fst
+average = fixed 0 . (\xs -> (fromIntegral $ Prelude.toInteger $ sum xs) / (fromIntegral $ length xs)) . fst
+tenth = fixed 0 . quantile 0.1 . fmap Prelude.fromIntegral . fst
+#+end_src
+
+#+begin_src haskell
+tick_
+#+end_src
+
+#+RESULTS:
+: 42
+
+#+begin_src haskell
+let ticksF x = ticks 10000 (F.dot sum (*) x) x
+let !f10 = [1 .. 16] :: F.Array '[4, 4] Double
+tf10 <- ticksF f10
+-- putStrLn $ show $ fst tf10
+putStrLn $ unpack $ tenth tf10
+#+end_src
+
+#+RESULTS:
+: >  >  > 473
+
+
+#+begin_src haskell
+let ticksF x = ticks 100 (F.mmult x) x
+let !f10 = [1 .. 1000000] :: F.Array '[1000, 1000] Double
+tf10 <- ticksF f10
+-- putStrLn $ show $ fst tf10
+putStrLn $ unpack $ tenth tf10
+#+end_src
+
+#+RESULTS:
+: >  >  > 12693791
+
+: >  >  > 122600
+
+#+begin_src haskell
+median <$> ticks 100000 (\x -> sin x / cos x * sqrt x) 2
+#+end_src
+
+#+RESULTS:
+: 1348
+
+
+* ToDo Bench ToDo
+
+- [X] better average, median etc
+- [ ] use template haskell to vary fixed matrix sizes
+  [[https://serokell.io/blog/introduction-to-template-haskell][A Brief Introduction to Template Haskell]]
+- [ ] why such a large dot vector dynamic?
+- [ ] why such a small dot vestor fixed?
