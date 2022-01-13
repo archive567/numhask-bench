@@ -18,12 +18,9 @@ import qualified Data.Vector as V
 import qualified NumHask.Array.Dynamic as D
 import qualified NumHask.Array.Fixed as F
 import qualified NumHask.Array.HMatrix as H
-import NumHask.Space (quantile)
 import qualified Numeric.LinearAlgebra as HMatrix
 import Perf
-import Data.FormatN
 import NumHask.Prelude as P hiding (option)
-import qualified Prelude
 import Data.Text (unpack, Text)
 import Options.Applicative
 import Control.Monad
@@ -60,16 +57,7 @@ stat =
   flag' StatMedian (long "median" <> help "report median") <|>
   pure StatAverage
 
-median :: ([Cycle], b) -> Text
-median = fixed 0 . quantile 0.5 . fmap Prelude.fromIntegral . fst
-
-average :: ([Cycle], b) -> Text
-average = fixed 0 . (\xs -> (fromIntegral $ Prelude.toInteger $ sum xs) / (fromIntegral $ length xs)) . fst
-
-tenth :: ([Cycle], b) -> Text
-tenth = fixed 0 . quantile 0.1 . fmap Prelude.fromIntegral . fst
-
-tickStat :: StatType -> ([Cycle], a) -> Text
+tickStat :: StatType -> [Cycle] -> Text
 tickStat StatBest = tenth
 tickStat StatMedian = median
 tickStat StatAverage = average
@@ -101,7 +89,7 @@ runHMatrix s n = do
   let ticksH x = ticks n (x HMatrix.<>) x
   let !h10 = (10 HMatrix.>< 10) [1 :: HMatrix.R ..]
   th10 <- ticksH h10
-  putStrLn $ unpack $ "hmatrix " <> tickStat s th10
+  putStrLn $ unpack $ "hmatrix " <> tickStat s (fst th10)
 
 runNHHMatrix :: StatType -> Int -> IO ()
 runNHHMatrix s n = do
@@ -109,7 +97,7 @@ runNHHMatrix s n = do
   let ticksH' x = ticks n (x `H.mmult`) x
   let !h'10 = [1 .. 100] :: H.Array '[10, 10] Double
   th'10 <- ticksH' h'10
-  putStrLn $ unpack $ "numhask-hmatrix " <> tickStat s th'10
+  putStrLn $ unpack $ "numhask-hmatrix " <> tickStat s (fst th'10)
 
 runF :: StatType -> Int -> IO ()
 runF s n = do
@@ -117,7 +105,7 @@ runF s n = do
   let ticksF x = ticks n (x `F.mmult`) x
   let !f10 = [1 .. 100] :: F.Array '[10, 10] Double
   tf10 <- ticksF f10
-  putStrLn $ unpack $ "Fixed " <> tickStat s tf10
+  putStrLn $ unpack $ "Fixed " <> tickStat s (fst tf10)
 
 runFDS :: StatType -> Int -> IO ()
 runFDS s n = do
@@ -125,7 +113,7 @@ runFDS s n = do
   let ticksF x = ticks n (F.dot sum (+) x) x
   let !f10 = [1 .. 100] :: F.Array '[10, 10] Double
   tf10 <- ticksF f10
-  putStrLn $ unpack $ "Fixed-dotsum " <> tickStat s tf10
+  putStrLn $ unpack $ "Fixed-dotsum " <> tickStat s (fst tf10)
 
 runD :: StatType -> Int -> IO ()
 runD s n = do
@@ -133,7 +121,7 @@ runD s n = do
   let !d10 = D.fromFlatList [10, 10] [1 .. 100] :: D.Array Double
   let ticksD x = ticks n (x `D.mmult`) x
   td10 <- ticksD d10
-  putStrLn $ unpack $ "Dynamic " <> tickStat s td10
+  putStrLn $ unpack $ "Dynamic " <> tickStat s (fst td10)
 
 runDotV :: StatType -> Int -> IO ()
 runDotV s n = do
@@ -141,7 +129,7 @@ runDotV s n = do
   let !vv = V.fromList [1 .. 100] :: V.Vector Double
   let ticksDotv x = ticks n (sum . V.zipWith (*) x) x
   tvd <- ticksDotv vv
-  putStrLn $ unpack $ "Vector-dot " <> tickStat s tvd
+  putStrLn $ unpack $ "Vector-dot " <> tickStat s (fst tvd)
 
 runDotF :: StatType -> Int -> IO ()
 runDotF s n = do
@@ -149,7 +137,7 @@ runDotF s n = do
   let !vf = P.fromList [1 .. 100] :: F.Array '[100] Double
   let ticksDotF x = ticks n (F.dot sum (+) x) x
   tfd <- ticksDotF vf
-  putStrLn $ unpack $ "Fixed-dot " <> tickStat s tfd
+  putStrLn $ unpack $ "Fixed-dot " <> tickStat s (fst tfd)
 
 runDotD :: StatType -> Int -> IO ()
 runDotD s n = do
@@ -158,5 +146,5 @@ runDotD s n = do
   let !vd2 = D.fromFlatList [100] [101 .. 200] :: D.Array Double
   let ticksDotD x = ticks n (D.dot sum (+) vd2) x
   tdd <- ticksDotD vd
-  putStrLn $ unpack $ "Dynamic-dot " <> tickStat s tdd
+  putStrLn $ unpack $ "Dynamic-dot " <> tickStat s (fst tdd)
   pure ()
