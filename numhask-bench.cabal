@@ -56,11 +56,11 @@ executable numhask-bench
       base >=4.7 && <5
     , hmatrix
     , adjunctions
-    , formatn ^>= 0.1
-    , numhask ^>= 0.8.1
-    , numhask-array ^>= 0.9
+    , formatn ^>= 0.2
+    , numhask ^>= 0.10
+    , numhask-array ^>= 0.10
     , numhask-hmatrix
-    , numhask-space ^>= 0.8.1
+    , numhask-space ^>= 0.10
     , perf ^>=0.9
     , text
     , vector

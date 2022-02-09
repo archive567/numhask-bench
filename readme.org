@@ -128,4 +128,5 @@ median <$> ticks 100000 (\x -> sin x / cos x * sqrt x) 2
 - [ ] use template haskell to vary fixed matrix sizes
   [[https://serokell.io/blog/introduction-to-template-haskell][A Brief Introduction to Template Haskell]]
 - [ ] why such a large dot vector dynamic?
-- [ ] why such a small dot vestor fixed?
+- [ ] why such a small dot vector fixed?
+- [ ]  https://stackoverflow.com/questions/11768656/reasonably-efficient-pure-functional-matrix-product-in-haskell
