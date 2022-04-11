@@ -8,47 +8,22 @@ To install the benchmark locally:
 cabal build && cabal install
 #+end_src
 
-#+RESULTS:
-
 #+begin_src sh
 numhask-bench -r 100 -m 10 -xdv --best
 #+end_src
 
 #+RESULTS:
-| mmult           |  10x10 |
-| hmatrix         |   1312 |
-| numhask-hmatrix |   1302 |
-| Fixed           |   2723 |
-| Dynamic         |   2761 |
-| Fixed-dotsum    |   4550 |
-| Vector-dot      |   5188 |
-| Fixed-dot       |    125 |
-| Dynamic-dot     | 155006 |
+| mmult           |              10x10 |
+| hmatrix         |              919.8 |
+| numhask-hmatrix |              924.5 |
+| Fixed           |             1501.0 |
+| Dynamic         |             1304.0 |
+| Fixed-dotsum    | 3088.9345661450925 |
+| Vector-dot      |             2737.0 |
+| Fixed-dot       |  98.45454545454545 |
+| Dynamic-dot     | 130326.39611060794 |
 
-#+begin_src haskell
-:load bench.hs
-#+end_src
-
-#+RESULTS:
-: *Main> [1 of 1] Compiling Main             ( bench.hs, interpreted )
-: Ok, one module loaded.
-
-#+begin_src haskell
-:main -r 100 -m 10 -xdv --best
-#+end_src
-
-#+RESULTS:
-: mmult 10x10
-: hmatrix 2950
-: numhask-hmatrix 1724
-: Fixed 2080
-: Dynamic 2705
-: Fixed-dotsum 5666
-: Vector-dot 21724
-: Fixed-dot 156
-: Dynamic-dot 174800
-
-* runtime control
+* ToDo runtime control
 
 https://downloads.haskell.org/~ghc/9.0.1/docs/html/users_guide/runtime_control.html
 
@@ -56,77 +31,78 @@ https://downloads.haskell.org/~ghc/9.0.1/docs/html/users_guide/runtime_control.h
 numhask-bench +RTS -A128m -N2 -qn2 -Fd4 -xn
 #+end_src
 
-#+RESULTS:
-
-
 * ghci
 
-#+begin_src haskell
+#+begin_src haskell :results output
 :set prompt " > "
 :set -Wno-type-defaults
 :set -Wno-name-shadowing
 :set -XOverloadedStrings
-#+end_src
-
-#+begin_src haskell
-import Perf
-#+end_src
-
-#+begin_src haskell
-import Perf
-import qualified NumHask.Array.Fixed as F
-import NumHask.Space (quantile)
-import Data.FormatN
-median = fixed 0 . quantile 0.5 . fmap Prelude.fromIntegral . fst
-average = fixed 0 . (\xs -> (fromIntegral $ Prelude.toInteger $ sum xs) / (fromIntegral $ length xs)) . fst
-tenth = fixed 0 . quantile 0.1 . fmap Prelude.fromIntegral . fst
-#+end_src
-
-#+begin_src haskell
-tick_
+putStrLn "ok"
 #+end_src
 
 #+RESULTS:
-: 42
+#+begin_example
+Build profile: -w ghc-8.10.7 -O1
+In order, the following will be built (use -v for more details):
+ - perf-0.10.0 (lib) (file src/Perf/Types.hs changed)
+ - numhask-bench-0.0.2 (exe:numhask-bench) (dependency rebuilt)
+Preprocessing library for perf-0.10.0..
+Building library for perf-0.10.0..
+[3 of 8] Compiling Perf.Types       ( src/Perf/Types.hs, /Users/tonyday/haskell/numhask-bench/dist-newstyle/build/x86_64-osx/ghc-8.10.7/perf-0.10.0/build/Perf/Types.o, /Users/tonyday/haskell/numhask-bench/dist-newstyle/build/x86_64-osx/ghc-8.10.7/perf-0.10.0/build/Perf/Types.dyn_o )
+Preprocessing executable 'numhask-bench' for numhask-bench-0.0.2..
+GHCi, version 8.10.7: https://www.haskell.org/ghc/  :? for help
+Loaded GHCi configuration from /Users/tonyday/haskell/numhask-bench/.ghci
+[1 of 1] Compiling Main             ( bench.hs, interpreted )
+Ok, one module loaded.
+,*Main>  >  >  >  > ok
+#+end_example
 
-#+begin_src haskell
-let ticksF x = ticks 10000 (F.dot sum (*) x) x
-let !f10 = [1 .. 16] :: F.Array '[4, 4] Double
-tf10 <- ticksF f10
--- putStrLn $ show $ fst tf10
-putStrLn $ unpack $ tenth tf10
+#+begin_src haskell :results output
+:load bench.hs
+putStrLn "ok"
 #+end_src
 
 #+RESULTS:
-: >  >  > 473
-
+: [1 of 1] Compiling Main             ( bench.hs, interpreted )
+: Ok, one module loaded.
+: ok
 
 #+begin_src haskell
-let ticksF x = ticks 100 (F.mmult x) x
-let !f10 = [1 .. 1000000] :: F.Array '[1000, 1000] Double
-tf10 <- ticksF f10
--- putStrLn $ show $ fst tf10
-putStrLn $ unpack $ tenth tf10
+:main -r 100 -m 10 -xdv --best
 #+end_src
 
 #+RESULTS:
-: >  >  > 12693791
+: mmult 10x10
+: hmatrix 1153.0
+: numhask-hmatrix 1201.0
+: Fixed 2628.0
+: Dynamic 1578.4796049806785
+: Fixed-dotsum 3304.5
+: Vector-dot 18698.0
+: Fixed-dot 110.3125
+: Dynamic-dot 140152.0
 
-: >  >  > 122600
+* new bench
 
-#+begin_src haskell
-median <$> ticks 100000 (\x -> sin x / cos x * sqrt x) 2
+#+begin_src sh
+numhask-bench-new --runs 10000 -m 10
 #+end_src
 
 #+RESULTS:
-: 1348
+|   | label1          | label2 | results |
+|   | ---             | ---    |     --- |
+|   | dynamic         | time   | 14100.0 |
+|   | fixed           | time   | 28000.0 |
+|   | hmatrix         | time   |  2380.0 |
+|   | numhask-hmatrix | time   |  2490.0 |
 
+#+begin_src sh
+numhask-bench-old --runs 10000 -m 10
+#+end_src
 
-* ToDo Bench ToDo
-
-- [X] better average, median etc
-- [ ] use template haskell to vary fixed matrix sizes
-  [[https://serokell.io/blog/introduction-to-template-haskell][A Brief Introduction to Template Haskell]]
-- [ ] why such a large dot vector dynamic?
-- [ ] why such a small dot vector fixed?
-- [ ]  https://stackoverflow.com/questions/11768656/reasonably-efficient-pure-functional-matrix-product-in-haskell
+#+RESULTS:
+| hmatrix         |   2173.507 |
+| numhask-hmatrix |  1941.2094 |
+| Fixed           |  22813.468 |
+| Dynamic         | 25433.8702 |
