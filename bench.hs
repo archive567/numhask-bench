@@ -22,6 +22,7 @@ import NumHask.Prelude as P hiding (option)
 import Data.Text (unpack)
 import Options.Applicative
 import Control.Monad
+import qualified Prelude
 
 data RunType = RunMMult | RunDotSum | RunDotVector deriving (Eq, Show)
 
@@ -31,7 +32,7 @@ data Options = Options
     optionMMult :: Bool,
     optionDotSum :: Bool,
     optionDotVector :: Bool,
-    optionStatType :: StatType
+    optionStatDType :: StatDType
   } deriving (Eq, Show)
 
 options :: Parser Options
@@ -47,7 +48,7 @@ opts :: ParserInfo Options
 opts = info (options <**> helper)
   (fullDesc <> progDesc "benchmark testing" <> header "A performance benchmark for numhask")
 
-stat' :: Parser StatType
+stat' :: Parser StatDType
 stat' =
   flag' StatBest (long "best" <> help "report upper decile") <|>
   flag' StatMedian (long "median" <> help "report median") <|>
@@ -57,7 +58,7 @@ main :: IO ()
 main = do
   o <- execParser opts
   let !n = optionRuns o
-  let s = optionStatType o
+  let s = optionStatDType o
   _ <- warmup 100
 
   putStrLn "mmult 10x10"
@@ -74,68 +75,68 @@ main = do
     runDotF s n
     runDotD s n
 
-runHMatrix :: StatType -> Int -> IO ()
+runHMatrix :: StatDType -> Int -> IO ()
 runHMatrix s n = do
   -- HMatrix 10x10 matrix multiplication
   let ticksH x = ticks n (x HMatrix.<>) x
   let !h10 = (10 HMatrix.>< 10) [1 :: HMatrix.R ..]
   th10 <- ticksH h10
-  putStrLn $ unpack $ "hmatrix " <> stat s (fst th10)
+  putStrLn $  "hmatrix " <> show (statD s (Prelude.fromIntegral <$> fst th10))
 
-runNHHMatrix :: StatType -> Int -> IO ()
+runNHHMatrix :: StatDType -> Int -> IO ()
 runNHHMatrix s n = do
   -- NumHask.Array.HMatrix
   let ticksH' x = ticks n (x `H.mmult`) x
   let !h'10 = [1 .. 100] :: H.Array '[10, 10] Double
   th'10 <- ticksH' h'10
-  putStrLn $ unpack $ "numhask-hmatrix " <> stat s (fst th'10)
+  putStrLn $  "numhask-hmatrix " <> show (statD s (Prelude.fromIntegral <$> fst th'10))
 
-runF :: StatType -> Int -> IO ()
+runF :: StatDType -> Int -> IO ()
 runF s n = do
   -- NumHask.Array.Fixed
   let ticksF x = ticks n (x `F.mmult`) x
   let !f10 = [1 .. 100] :: F.Array '[10, 10] Double
   tf10 <- ticksF f10
-  putStrLn $ unpack $ "Fixed " <> stat s (fst tf10)
+  putStrLn $  "Fixed " <> show (statD s (Prelude.fromIntegral <$> fst tf10))
 
-runFDS :: StatType -> Int -> IO ()
+runFDS :: StatDType -> Int -> IO ()
 runFDS s n = do
   -- NumHask.Array.Fixed.dot
   let ticksF x = ticks n (F.dot sum (+) x) x
   let !f10 = [1 .. 100] :: F.Array '[10, 10] Double
   tf10 <- ticksF f10
-  putStrLn $ unpack $ "Fixed-dotsum " <> stat s (fst tf10)
+  putStrLn $  "Fixed-dotsum " <> show (statD s (Prelude.fromIntegral <$> fst tf10))
 
-runD :: StatType -> Int -> IO ()
+runD :: StatDType -> Int -> IO ()
 runD s n = do
   -- NumHask.Array.Dynamic
   let !d10 = D.fromFlatList [10, 10] [1 .. 100] :: D.Array Double
   let ticksD x = ticks n (x `D.mmult`) x
   td10 <- ticksD d10
-  putStrLn $ unpack $ "Dynamic " <> stat s (fst td10)
+  putStrLn $  "Dynamic " <> show (statD s (Prelude.fromIntegral <$> fst td10))
 
-runDotV :: StatType -> Int -> IO ()
+runDotV :: StatDType -> Int -> IO ()
 runDotV s n = do
   -- Vector dot
   let !vv = V.fromList [1 .. 100] :: V.Vector Double
   let ticksDotv x = ticks n (sum . V.zipWith (*) x) x
   tvd <- ticksDotv vv
-  putStrLn $ unpack $ "Vector-dot " <> stat s (fst tvd)
+  putStrLn $  "Vector-dot " <> show (statD s (Prelude.fromIntegral <$> fst tvd))
 
-runDotF :: StatType -> Int -> IO ()
+runDotF :: StatDType -> Int -> IO ()
 runDotF s n = do
   -- Fixed Dot
   let !vf = P.fromList [1 .. 100] :: F.Array '[100] Double
   let ticksDotF x = ticks n (F.dot sum (+) x) x
   tfd <- ticksDotF vf
-  putStrLn $ unpack $ "Fixed-dot " <> stat s (fst tfd)
+  putStrLn $  "Fixed-dot " <> show (statD s (Prelude.fromIntegral <$> fst tfd))
 
-runDotD :: StatType -> Int -> IO ()
+runDotD :: StatDType -> Int -> IO ()
 runDotD s n = do
   -- Dynamic Dot
   let !vd = D.fromFlatList [100] [1 .. 100] :: D.Array Double
   let !vd2 = D.fromFlatList [100] [101 .. 200] :: D.Array Double
   let ticksDotD = ticks n (D.dot sum (+) vd2)
   tdd <- ticksDotD vd
-  putStrLn $ unpack $ "Dynamic-dot " <> stat s (fst tdd)
+  putStrLn $  "Dynamic-dot " <> show (statD s (Prelude.fromIntegral <$> fst tdd))
   pure ()
