@@ -61,7 +61,7 @@ executable numhask-bench
     , numhask-array ^>= 0.10
     , numhask-hmatrix
     , numhask-space ^>= 0.10
-    , perf ^>=0.9
+    , perf ^>=0.10
     , text
     , vector
     , optparse-applicative
