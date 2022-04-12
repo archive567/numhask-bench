@@ -70,7 +70,6 @@ options = Options <$>
   switch (long "record" <> short 'g' <> help "record the result to a golden file") <*>
   switch (long "check" <> short 'c' <> help "check versus a golden file")
 
-
 opts :: ParserInfo Options
 opts = info (options <**> helper)
   (fullDesc <> progDesc "benchmark testing" <> header "A performance benchmark for numhask")
@@ -118,20 +117,12 @@ main = do
   case r of
     RunMMult -> do
       run_ rio mt n runMM
-      runHMatrix s n
-      runNHHMatrix s n
-      runF s n
-      runD s n
     RunDotSum -> do
       run_ rio mt n runFDS_
-      runFDS s n
     RunDotVector -> do
       run_ rio mt n runDotV_
       run_ rio mt n runDotF_
       run_ rio mt n runDotD_
-      runDotV s n
-      runDotF s n
-      runDotD s n
 
 -- | unification of the different measurements to being a list of doubles.
 measureDs :: MeasureType -> Int -> Measure IO [[Double]]
@@ -166,108 +157,23 @@ runMM = do
   pure ()
 {-# Inline runMM #-}
 
-runHMatrix_ :: (Semigroup t) => PerfT IO t (HMatrix.Matrix Double)
-runHMatrix_ = fap "hmatrix" (x HMatrix.<>) x
-  where
-    x = (10 HMatrix.>< 10) [1 :: HMatrix.R ..]
-
-runHMatrix :: StatDType -> Int -> IO ()
-runHMatrix s n = do
-  -- HMatrix 10x10 matrix multiplication
-  let ticksH x = ticks n (x HMatrix.<>) x
-  let !h10 = (10 HMatrix.>< 10) [1 :: HMatrix.R ..]
-  th10 <- ticksH h10
-  putStrLn $ "hmatrix " <> show (statD s (Prelude.fromIntegral <$> fst th10))
-
-runNHHMatrix_ :: (Semigroup t) => PerfT IO t (H.Array '[10,10] Double)
-runNHHMatrix_ = fap "numhask-hmatrix" (x `H.mmult`) x
-  where
-    x = [1 .. 100] :: H.Array '[10, 10] Double
-
-runNHHMatrix :: StatDType -> Int -> IO ()
-runNHHMatrix s n = do
-  -- NumHask.Array.HMatrix
-  let ticksH' x = ticks n (x `H.mmult`) x
-  let !h'10 = [1 .. 100] :: H.Array '[10, 10] Double
-  th'10 <- ticksH' h'10
-  putStrLn $ "numhask-hmatrix " <> show (statD s (Prelude.fromIntegral <$> fst th'10))
-
-runF_ :: (Semigroup t) => PerfT IO t (F.Array '[10,10] Double)
-runF_ = fap "fixed" (x `F.mmult`) x
-  where
-    x = [1 .. 100] :: F.Array '[10, 10] Double
-
-runF :: StatDType -> Int -> IO ()
-runF s n = do
-  -- NumHask.Array.Fixed
-  let ticksF x = ticks n (x `F.mmult`) x
-  let !f10 = [1 .. 100] :: F.Array '[10, 10] Double
-  tf10 <- ticksF f10
-  putStrLn $ "Fixed " <> show (statD s (Prelude.fromIntegral <$> fst tf10))
-
 runFDS_ :: (Semigroup t) => PerfT IO t (F.Array '[10,10] Double)
 runFDS_ = fap "fixed" (F.dot sum (+) x) x
   where
     x = [1 .. 100] :: F.Array '[10, 10] Double
-
-runFDS :: StatDType -> Int -> IO ()
-runFDS s n = do
-  -- NumHask.Array.Fixed.dot
-  let ticksF x = ticks n (F.dot sum (+) x) x
-  let !f10 = [1 .. 100] :: F.Array '[10, 10] Double
-  tf10 <- ticksF f10
-  putStrLn $ "Fixed-dotsum " <> show (statD s (Prelude.fromIntegral <$> fst tf10))
-
-runD_ :: (Semigroup t) => PerfT IO t (D.Array Double)
-runD_ = fap "dynamic" (x `D.mmult`) x
-  where
-    x = D.fromFlatList [10, 10] [1 .. 100] :: D.Array Double
-
-runD :: StatDType -> Int -> IO ()
-runD s n = do
-  let !d10 = D.fromFlatList [10, 10] [1 .. 100] :: D.Array Double
-  let ticksD x = ticks n (x `D.mmult`) x
-  td10 <- ticksD d10
-  putStrLn $ "Dynamic " <> show (statD s (Prelude.fromIntegral <$> fst td10))
 
 runDotV_ :: (Semigroup t) => PerfT IO t Double
 runDotV_ = fap "dynamic" (sum . V.zipWith (*) x) x
   where
     x = V.fromList [1 .. 100] :: V.Vector Double
 
-runDotV :: StatDType -> Int -> IO ()
-runDotV s n = do
-  -- Vector dot
-  let !vv = V.fromList [1 .. 100] :: V.Vector Double
-  let ticksDotv x = ticks n (sum . V.zipWith (*) x) x
-  tvd <- ticksDotv vv
-  putStrLn $ "Vector-dot " <> show (statD s (Prelude.fromIntegral <$> fst tvd))
-
 runDotF_ :: (Semigroup t) => PerfT IO t (F.Array ('[]::[Nat]) Double)
 runDotF_ = fap "dynamic" (F.dot sum (+) x) x
   where
     x = P.fromList [1 .. 100] :: F.Array '[100] Double
-
-runDotF :: StatDType -> Int -> IO ()
-runDotF s n = do
-  -- Fixed Dot
-  let !vf = P.fromList [1 .. 100] :: F.Array '[100] Double
-  let ticksDotF x = ticks n (F.dot sum (+) x) x
-  tfd <- ticksDotF vf
-  putStrLn $ "Fixed-dot " <> show (statD s (Prelude.fromIntegral <$> fst tfd))
 
 runDotD_ :: (Semigroup t) => PerfT IO t (D.Array Double)
 runDotD_ = fap "dynamic" (D.dot sum (+) vd) vd2
   where
     vd = D.fromFlatList [100] [1 .. 100] :: D.Array Double
     vd2 = D.fromFlatList [100] [101 .. 200] :: D.Array Double
-
-runDotD :: StatDType -> Int -> IO ()
-runDotD s n = do
-  -- Dynamic Dot
-  let !vd = D.fromFlatList [100] [1 .. 100] :: D.Array Double
-  let !vd2 = D.fromFlatList [100] [101 .. 200] :: D.Array Double
-  let ticksDotD = ticks n (D.dot sum (+) vd2)
-  tdd <- ticksDotD vd
-  putStrLn $ "Dynamic-dot " <> show (statD s (Prelude.fromIntegral <$> fst tdd))
-  pure ()
