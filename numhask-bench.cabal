@@ -57,7 +57,7 @@ executable numhask-bench
     , hmatrix
     , adjunctions
     , containers
-    , formatn ^>= 0.2
+    , formatn ^>= 0.2.1
     , numhask ^>= 0.10
     , numhask-array ^>= 0.10
     , numhask-hmatrix
