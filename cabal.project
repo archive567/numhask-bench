@@ -1,8 +1,5 @@
 packages:
   numhask-bench.cabal
-  ../perf/perf.cabal
+  ../numhask-hmatrix/numhask-hmatrix.cabal
 
-source-repository-package
-    type: git
-    location: https://github.com/tonyday567/numhask-hmatrix
-    tag: 8ad26dffce30e12bf95556318decd7a8bbd7fd97
+optimization: 2
