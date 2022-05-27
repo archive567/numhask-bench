@@ -54,6 +54,7 @@ executable numhask-bench
     -- -nonmoving-gc -A128m -N2 -qn2 -Fd4
   build-depends:
       base >=4.7 && <5
+    , array
     , hmatrix
     , adjunctions
     , containers
@@ -66,4 +67,6 @@ executable numhask-bench
     , text
     , vector
     , optparse-applicative
+    , optics-core
+    , chart-svg
   default-language: Haskell2010

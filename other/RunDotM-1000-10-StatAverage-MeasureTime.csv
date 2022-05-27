@@ -1,0 +1,4 @@
+dynamic-dot,time,1.98e6
+dynamic-mmult,time,1.82e4
+fixed-dot,time,6.10e4
+fixed-mmult,time,7.74e3

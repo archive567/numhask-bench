@@ -10,43 +10,263 @@ cabal build && cabal install
 
 * defaults
 
-#+begin_src sh
-numhask-bench --runs 10000 -m 10
+#+begin_src sh :report output :exports both
+numhask-bench -rc
 #+end_src
 
 #+RESULTS:
-|   | label1          | label2 | results |
-|   | ---             | ---    |     --- |
-|   | dynamic         | time   | 13700.0 |
-|   | fixed           | time   | 26400.0 |
-|   | hmatrix         | time   |  2300.0 |
-|   | numhask-hmatrix | time   |  2370.0 |
+| label1          | label2 | old_result | new_result | status            |
+|                 |        |            |            |                   |
+| dynamic         | time   |    27200.0 |    28000.0 |                   |
+| fixed           | time   |    21300.0 |    20000.0 | improvement       |
+| hmatrix         | time   |     2220.0 |     2380.0 | slightly-degraded |
+| numhask-hmatrix | time   |     2490.0 |     2250.0 | improvement       |
 
-#+begin_src sh
-numhask-bench --runs 10000 -m 10 --best
+#+begin_src sh :exports both
+numhask-bench -rc --best
 #+end_src
 
 #+RESULTS:
-|   | label1          | label2 | results |
-|   | ---             | ---    |     --- |
-|   | dynamic         | time   |  1340.0 |
-|   | fixed           | time   |  1400.0 |
-|   | hmatrix         | time   |   921.0 |
-|   | numhask-hmatrix | time   |   922.0 |
+| label1          | label2 | old_result | new_result | status |
+|                 |        |            |            |        |
+| dynamic         | time   |     1360.0 |     1360.0 |        |
+| fixed           | time   |     1370.0 |     1360.0 |        |
+| hmatrix         | time   |      908.0 |      908.0 |        |
+| numhask-hmatrix | time   |      943.0 |      911.0 |        |
+
+#+begin_src sh :exports both
+numhask-bench --dotm -n 1000 -rc
+#+end_src
+
+#+RESULTS:
+| label1        | label2 | old_result | new_result | status            |
+|               |        |            |            |                   |
+| dynamic-dot   | time   |  1980000.0 |  1980000.0 |                   |
+| dynamic-mmult | time   |    15700.0 |    18200.0 | slightly-degraded |
+| fixed-dot     | time   |    57100.0 |    61000.0 | slightly-degraded |
+| fixed-mmult   | time   |     7000.0 |     7740.0 | slightly-degraded |
+
+#+begin_src sh :exports both
+numhask-bench --dotm -n 1000 -rc --best
+#+end_src
+
+#+RESULTS:
+| label1        | label2 | old_result | new_result | status |
+|               |        |            |            |        |
+| dynamic-dot   | time   |   136000.0 |   136000.0 |        |
+| dynamic-mmult | time   |     1360.0 |     1350.0 |        |
+| fixed-dot     | time   |     3050.0 |     3040.0 |        |
+| fixed-mmult   | time   |     1400.0 |     1390.0 |        |
+
+#+begin_src sh :exports both
+numhask-bench --dotv -n 1000 -rc
+#+end_src
+
+#+RESULTS:
+| label1     | label2 | old_result | new_result | status   |
+|            |        |            |            |          |
+| fixed-dot  | time   |      111.0 |      204.0 | degraded |
+| vector-dot | time   |     3360.0 |     4270.0 | degraded |
+
+#+begin_src sh :exports both
+numhask-bench --dotv -n 1000 -rc --best
+#+end_src
+
+#+RESULTS:
+| label1     | label2 | old_result | new_result | status            |
+|            |        |            |            |                   |
+| fixed-dot  | time   |       91.3 |      106.0 | slightly-degraded |
+| vector-dot | time   |     2710.0 |     3090.0 | slightly-degraded |
 
 * runtime control
 
 https://downloads.haskell.org/~ghc/9.0.1/docs/html/users_guide/runtime_control.html
 
-#+begin_src sh
-numhask-bench --runs 10000 -m 10 +RTS -A128m -Fd4 -xn
+#+begin_src sh :exports both
+numhask-bench +RTS -A128m -Fd4 -xn
 #+end_src
 
 #+RESULTS:
-|   | label1          | label2 | results |
-|   | ---             | ---    |     --- |
-|   | dynamic         | time   | 23900.0 |
-|   | fixed           | time   |  2200.0 |
-|   | hmatrix         | time   |  1230.0 |
-|   | numhask-hmatrix | time   |  1230.0 |
+| label1          | label2 | results |
+|                 |        |         |
+| dynamic         | time   |  2040.0 |
+| fixed           | time   |  2100.0 |
+| hmatrix         | time   | 27800.0 |
+| numhask-hmatrix | time   |  1520.0 |
 
+* space
+
+#+begin_src sh :exports both
+numhask-bench --spacetime +RTS -T -RTS
+#+end_src
+
+#+RESULTS:
+| label1          | label2       | results |
+|                 |              |         |
+| dynamic         | MaxMem       |  1570.0 |
+| dynamic         | allocated    |  8760.0 |
+| dynamic         | gcLiveBytes  |  7570.0 |
+| dynamic         | gcollects    |  0.0023 |
+| dynamic         | maxLiveBytes |       0 |
+| dynamic         | time         | 35500.0 |
+| fixed           | MaxMem       | 15200.0 |
+| fixed           | allocated    |  8960.0 |
+| fixed           | gcLiveBytes  |  7830.0 |
+| fixed           | gcollects    |  0.0022 |
+| fixed           | maxLiveBytes |  8010.0 |
+| fixed           | time         | 55100.0 |
+| hmatrix         | MaxMem       |   210.0 |
+| hmatrix         | allocated    |  3620.0 |
+| hmatrix         | gcLiveBytes  |  2910.0 |
+| hmatrix         | gcollects    |  0.0009 |
+| hmatrix         | maxLiveBytes |       0 |
+| hmatrix         | time         | 22100.0 |
+| numhask-hmatrix | MaxMem       |  4090.0 |
+| numhask-hmatrix | allocated    |  3230.0 |
+| numhask-hmatrix | gcLiveBytes  |  2560.0 |
+| numhask-hmatrix | gcollects    |  0.0008 |
+| numhask-hmatrix | maxLiveBytes |  1920.0 |
+| numhask-hmatrix | time         | 24200.0 |
+
+* histograms
+
+#+begin_src haskell :exports both
+:r
+:set prompt " > "
+:set -Wno-type-defaults
+:set -Wno-name-shadowing
+:set -XOverloadedStrings
+:set -XOverloadedLabels
+import qualified Data.Text as Text
+import qualified Data.Map.Strict as Map
+import Chart
+import Optics.Core
+import Perf
+putStrLn "ok"
+#+end_src
+
+#+RESULTS:
+: >  >  >  >  >  >  >  >  >  > ok
+
+#+begin_src haskell :exports both
+t <- readFile "other/RunMMult-10000-10-StatAverage-MeasureTime.map"
+m = read t :: (Map.Map Text.Text [[Double]])
+d = m Map.! "dynamic"
+take 10 $ mconcat $ d
+#+end_src
+
+#+RESULTS:
+: >  > [3200.0,1584.0,1434.0,1510.0,1666.0,1406.0,1406.0,1522.0,1594.0,1404.0]
+
+** dynamic
+
+#+begin_src haskell :results output :exports both
+filter (>= 1e5) $ mconcat d
+#+end_src
+
+#+RESULTS:
+: [7668902.0,8348156.0,8809846.0,1.0789044e7,1.1317536e7,1.1542064e7,1.1922436e7,1.53579968e8,9022516.0,8921140.0,8971586.0,8850112.0,1.070094e7]
+
+#+begin_src haskell :file other/dynamic.svg :results output graphics file :exports both
+writeChartSvg "other/dynamic.svg" $ mempty & #hudOptions .~ colourHudOptions (rgb light) defaultHudOptions & #charts .~ unnamed [(RectChart (defaultRectStyle & #borderSize .~ 0 & #color .~ Colour 1 1 1 1) (zipWith (\y x -> Rect x (x + 1) 0 y) (fmap log $ mconcat d) [0..]))]
+#+end_src
+
+#+RESULTS:
+[[file:other/dynamic.svg]]
+
+** fixed
+
+#+begin_src haskell :exports both
+let (Just d) = Map.lookup "fixed" m
+take 10 $ mconcat $ d
+filter (>= 1e5) $ mconcat d
+#+end_src
+
+#+RESULTS:
+| 5225344.0 | 12773898.0 | 10488018.0 | 25661112.0 | 7318078.0 | 7116930.0 | 9726052.0 | 9709020.0 | 9599806.0 | 65775042.0 | 7350670.0 | 7046240.0 | 7293398.0 | 8669668.0 |
+
+#+begin_src haskell :file other/fixed.svg :results output graphics file :exports both
+writeChartSvg "other/fixed.svg" $ mempty & #hudOptions .~ colourHudOptions (rgb light) defaultHudOptions & #charts .~ unnamed ([(RectChart (defaultRectStyle & #borderSize .~ 0 & #color .~ Colour 1 1 1 1) (zipWith (\y x -> Rect x (x + 1) 0 y) (fmap log $ mconcat d) [0..]))])
+#+end_src
+
+#+RESULTS:
+[[file:other/fixed.svg]]
+
+
+** hmatrix
+
+#+begin_src haskell :exports both
+let (Just d) = Map.lookup "hmatrix" m
+take 10 $ mconcat d
+filter (>= 1e5) $ mconcat d
+#+end_src
+
+#+RESULTS:
+| 7586972.0 | 3526798.0 | 941788.0 | 913168.0 |
+
+#+begin_src haskell :file other/hmatrix.svg :results output graphics file :exports both
+writeChartSvg "other/hmatrix.svg" $ mempty & #hudOptions .~ colourHudOptions (rgb light) defaultHudOptions & #charts .~ unnamed [(RectChart (defaultRectStyle & #borderSize .~ 0 & #color .~ Colour 1 1 1 1) (zipWith (\y x -> Rect x (x + 1) 0 y) (fmap log $ mconcat d) [0..]))]
+#+end_src
+
+#+RESULTS:
+[[file:other/hmatrix.svg]]
+
+** numhask-hmatrix
+
+#+begin_src haskell :exports both
+let (Just d) = Map.lookup "numhask-hmatrix" m
+take 10 $ mconcat d
+filter (>= 1e5) $ mconcat d
+#+end_src
+
+#+RESULTS:
+| 758078.0 | 1633186.0 | 916998.0 | 132930.0 | 604870.0 | 2835802.0 | 566076.0 | 1975676.0 | 419074.0 | 1231560.0 | 602724.0 | 3088010.0 |
+
+#+begin_src haskell :file other/numhask-hmatrix.svg :results output graphics file :exports both
+writeChartSvg "other/numhask-hmatrix.svg" $ mempty & #hudOptions .~ colourHudOptions (rgb light) defaultHudOptions & #charts .~ unnamed [(RectChart (defaultRectStyle & #borderSize .~ 0 & #color .~ Colour 1 1 1 1) (zipWith (\y x -> Rect x (x + 1) 0 y) (fmap log $ mconcat d) [0..]))]
+#+end_src
+
+#+RESULTS:
+[[file:other/numhask-hmatrix.svg]]
+
+** dynamic dotm
+
+#+begin_src haskell :exports both
+t <- readFile "other/RunDotM-10000-10-StatMedian-MeasureTime.map"
+m = read t :: (Map.Map Text.Text [[Double]])
+d = m Map.! "dynamic"
+take 10 $ mconcat $ d
+#+end_src
+
+#+RESULTS:
+: >  > [3200.0,1584.0,1434.0,1510.0,1666.0,1406.0,1406.0,1522.0,1594.0,1404.0]
+
+
+#+begin_src haskell :results output :exports both
+filter (>= 1e7) $ mconcat d
+#+end_src
+
+#+RESULTS:
+: [1.0789044e7,1.1317536e7,1.1542064e7,1.1922436e7,1.53579968e8,1.070094e7]
+
+#+begin_src haskell :file other/dynamic-dot.svg :results output graphics file :exports both
+writeChartSvg "other/dynamic-dot.svg" $ mempty & #hudOptions .~ (colourHudOptions (rgb light) defaultHudOptions & #frames .~ [(20, FrameOptions (Just (border 0.004 white)) 0.1)]) & #charts .~ unnamed [(RectChart (defaultRectStyle & #borderSize .~ 0 & #color .~ Colour 1 1 1 1) (zipWith (\y x -> Rect x (x + 1) 0 y) (fmap log $ mconcat d) [0..]))]
+#+end_src
+
+#+RESULTS:
+[[file:other/dynamic-dot.svg]]
+
+
+* array comparison
+
+https://stackoverflow.com/questions/11768656/reasonably-efficient-pure-functional-matrix-product-in-haskell
+
+#+begin_src sh :exports both
+numhask-bench --array --median
+#+end_src
+
+#+RESULTS:
+| label1      | label2 | results |
+|             |        |         |
+| array-mmult | time   |  7640.0 |
+| fixed-dot   | time   |  3220.0 |
